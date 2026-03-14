@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rapport staff | A4P</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="../assets/logo-a4p.png" alt="A4P" /><div><div class="brand-title">Rapport staff</div><div class="brand-sub">Export équipe</div></div></div>
+    <div class="nav-section"><div class="nav-label">Navigation</div><a class="nav-link" href="../dashboard.html">Dashboard</a><a class="nav-link active" href="#">Rapport</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div><h1 id="reportTitle">Rapport équipe</h1><p id="reportSub">Synthèse staff automatisée.</p></div><div class="actions"><button class="btn" onclick="window.print()">Exporter PDF</button><a class="btn secondary" id="reportBack" href="#">Retour équipe</a></div></div>
+    <section class="card hero-card"><span class="eyebrow">Synthèse staff</span><h2 id="staffHeadline"></h2><p id="staffText"></p></section>
+    <div class="three-col section-space">
+      <section class="card"><h3>Indice mental</h3><div class="kpi-value" id="repGlobal">0</div></section>
+      <section class="card"><h3>Point fort</h3><div class="kpi-value" style="font-size:22px" id="repStrong">—</div></section>
+      <section class="card"><h3>Point à développer</h3><div class="kpi-value" style="font-size:22px" id="repWeak">—</div></section>
+    </div>
+    <section class="card section-space"><h2>Joueurs à suivre</h2><div id="alertsList"></div></section>
+  </main>
+</div>
+<script src="../js/config.js"></script>
+<script src="../data/default-data.js"></script>
+<script src="../js/core.js"></script>
+<script>
+const teamId = A4P.qs('team') || 'u18';
+const team = A4P.getTeamById(teamId);
+const stats = A4P.computeTeamStats(team);
+const dims = stats.dimensions;
+const strong = Object.entries(dims).sort((a,b)=>b[1]-a[1])[0];
+const weak = Object.entries(dims).sort((a,b)=>a[1]-b[1])[0];
+document.getElementById('reportTitle').textContent = `Rapport staff • ${team.name}`;
+document.getElementById('reportSub').textContent = `${team.sport} • ${team.category} • ${stats.playersCount} joueurs`;
+document.getElementById('reportBack').href = `../equipe.html?team=${team.id}`;
+document.getElementById('staffHeadline').textContent = `${team.name} présente un indice mental collectif de ${stats.mentalGlobal}/100.`;
+document.getElementById('staffText').textContent = `Le profil collectif dominant est « ${stats.dominantProfile} ». La dimension la plus solide est ${strong[0]} (${strong[1]}), tandis que la dimension prioritaire à développer est ${weak[0]} (${weak[1]}). ${stats.alertsCount} joueur(s) nécessitent une vigilance staff.`;
+document.getElementById('repGlobal').textContent = stats.mentalGlobal;
+document.getElementById('repStrong').textContent = `${strong[0]} (${strong[1]})`;
+document.getElementById('repWeak').textContent = `${weak[0]} (${weak[1]})`;
+document.getElementById('alertsList').innerHTML = stats.alerts.length ? stats.alerts.map(({player, level}) => `<div class="panel"><div><strong>${player.firstName} ${player.lastName}</strong><div class="small muted">${player.position || 'Poste non renseigné'}</div></div><div><span class="alert-badge ${A4P.badgeClass(level)}">${A4P.badgeLabel(level)}</span></div></div>`).join('') : '<p class="muted">Aucun joueur en vigilance orange ou rouge.</p>';
+</script>
+</body>
+</html>

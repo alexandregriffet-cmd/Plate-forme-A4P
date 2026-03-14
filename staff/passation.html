@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Passation équipe | A4P</title>
+  <link rel="stylesheet" href="../css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="../assets/logo-a4p.png" alt="A4P" /><div><div class="brand-title">Passation équipe</div><div class="brand-sub">Création club / coach / équipe</div></div></div>
+    <div class="nav-section"><div class="nav-label">Navigation</div><a class="nav-link" href="../index.html">Hub</a><a class="nav-link active" href="passation.html">Passation</a><a class="nav-link" href="../dashboard.html">Dashboard</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div><h1>Générateur de passation équipe</h1><p>Crée un club, un coach, une équipe et récupère les liens à envoyer.</p></div><div class="actions"><a class="btn secondary" href="../dashboard.html">Voir le dashboard</a></div></div>
+    <div class="three-col">
+      <section class="card"><span class="eyebrow">Club</span><label>Nom du club</label><input id="clubName" placeholder="Ex. Racing 92" /><label class="section-space">Contact</label><input id="clubContact" placeholder="staff@club.fr" /><div class="form-actions"><button class="btn" id="saveClub">Enregistrer le club</button></div></section>
+      <section class="card"><span class="eyebrow">Coach</span><label>Nom du coach</label><input id="coachName" placeholder="Ex. Coach U18" /><label class="section-space">Rôle</label><input id="coachRole" placeholder="Ex. Référent performance" /><div class="form-actions"><button class="btn" id="saveCoach">Ajouter coach</button></div></section>
+      <section class="card"><span class="eyebrow">Équipe</span><label>Nom de l'équipe</label><input id="teamName" placeholder="Ex. U18" /><label class="section-space">Sport</label><input id="teamSport" placeholder="Ex. Rugby" /><label class="section-space">Catégorie</label><input id="teamCategory" placeholder="Ex. Compétition" /><div class="form-actions"><button class="btn" id="saveTeam">Créer l'équipe</button></div></section>
+    </div>
+    <div class="two-col section-space">
+      <section class="card"><h2>Liens de passation</h2><div id="linksBox" class="muted">Crée ou sélectionne une équipe pour générer les liens CMP / PMP / psycho.</div></section>
+      <section class="card"><h2>Ajouter un joueur</h2><label>Équipe</label><select id="playerTeam"></select><div class="form-grid section-space"><div><label>Prénom</label><input id="playerFirst" /></div><div><label>Nom</label><input id="playerLast" /></div></div><label class="section-space">Poste</label><input id="playerPosition" /><div class="form-actions"><button class="btn" id="savePlayer">Ajouter joueur</button></div></section>
+    </div>
+  </main>
+</div>
+<script src="../js/config.js"></script>
+<script src="../data/default-data.js"></script>
+<script src="../js/core.js"></script>
+<script>
+function refreshTeams(){
+  const data = A4P.loadData();
+  const select = document.getElementById('playerTeam');
+  select.innerHTML = data.teams.map(t=>`<option value="${t.id}">${t.name} • ${t.sport}</option>`).join('');
+  if(data.teams[0]) renderLinks(data.teams[0].id);
+}
+function renderLinks(teamId){
+  const team = A4P.getTeamById(teamId); if(!team) return;
+  const origin = window.location.origin + window.location.pathname.replace(/staff\/passation\.html$/, '');
+  document.getElementById('linksBox').innerHTML = `
+    <div class="panel"><div><strong>${team.name}</strong><div class="small muted">CMP</div></div><div class="link-box">${origin}${team.passationLinks.cmp}</div></div>
+    <div class="panel"><div><strong>${team.name}</strong><div class="small muted">PMP</div></div><div class="link-box">${origin}${team.passationLinks.pmp}</div></div>
+    <div class="panel"><div><strong>${team.name}</strong><div class="small muted">Psycho</div></div><div class="link-box">${origin}${team.passationLinks.psycho}</div></div>`;
+}
+document.getElementById('saveClub').onclick = () => { A4P.upsertClub({name:clubName.value || 'Club A4P', contact:clubContact.value || ''}); alert('Club enregistré.'); };
+document.getElementById('saveCoach').onclick = () => { A4P.addCoach({name:coachName.value || 'Coach', role:coachRole.value || ''}); alert('Coach ajouté.'); };
+document.getElementById('saveTeam').onclick = () => { const id = A4P.addTeam({name:teamName.value || 'Nouvelle équipe', sport:teamSport.value || 'Sport', category:teamCategory.value || 'Catégorie'}); refreshTeams(); renderLinks(id); alert('Équipe créée.'); };
+document.getElementById('savePlayer').onclick = () => { A4P.addPlayer(playerTeam.value, {firstName:playerFirst.value || 'Prénom', lastName:playerLast.value || 'Nom', position:playerPosition.value || ''}); alert('Joueur ajouté à l’équipe.'); };
+document.getElementById('playerTeam').onchange = e => renderLinks(e.target.value);
+refreshTeams();
+</script>
+</body>
+</html>
