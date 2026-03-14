@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard club | A4P</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="assets/logo-a4p.png" alt="A4P" /><div><div class="brand-title">A4P Dashboard</div><div class="brand-sub">Vue club / staff</div></div></div>
+    <div class="nav-section"><div class="nav-label">Navigation</div><a class="nav-link" href="index.html">Hub principal</a><a class="nav-link active" href="dashboard.html">Dashboard club</a><a class="nav-link" href="staff/passation.html">Passation équipe</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div><h1>Dashboard club</h1><p>Vue consolidée pour dirigeants, coaches et staff mental.</p></div><div class="actions"><a class="btn" href="staff/passation.html">Nouvelle équipe</a><button class="btn secondary" onclick="window.print()">Exporter PDF</button></div></div>
+    <div class="grid kpi">
+      <article class="card"><span class="eyebrow">Club</span><div class="kpi-value" id="clubTeams">0</div><div class="kpi-sub">équipes actives</div></article>
+      <article class="card"><span class="eyebrow">Suivi</span><div class="kpi-value" id="clubPlayers">0</div><div class="kpi-sub">joueurs testés</div></article>
+      <article class="card"><span class="eyebrow">Indice</span><div class="kpi-value" id="clubGlobal">0</div><div class="kpi-sub">score mental global</div></article>
+      <article class="card"><span class="eyebrow">Alertes</span><div class="kpi-value" id="clubAlerts">0</div><div class="kpi-sub">joueurs à suivre</div></article>
+    </div>
+    <div class="two-col section-space">
+      <section class="card"><h2>Radar collectif club</h2><div class="chart-box"><canvas id="clubRadar"></canvas></div></section>
+      <section class="card"><h2>Évolution saison</h2><div class="chart-box"><canvas id="seasonLine"></canvas></div></section>
+    </div>
+    <div class="two-col section-space">
+      <section class="card"><h2>Équipes</h2><div class="table-wrap"><table><thead><tr><th>Équipe</th><th>Sport</th><th>Joueurs</th><th>Score global</th><th>Alertes</th><th>Action</th></tr></thead><tbody id="teamsTable"></tbody></table></div></section>
+      <section class="card"><h2>Profils collectifs</h2><div class="chart-box"><canvas id="profilesChart"></canvas></div></section>
+    </div>
+    <section class="card section-space"><h2>Synthèse staff automatique</h2><div id="staffSummary" class="muted"></div></section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/config.js"></script>
+<script src="data/default-data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/charts.js"></script>
+<script>
+const data = A4P.loadData();
+const allPlayers = A4P.getAllPlayers(data);
+const statsByTeam = data.teams.map(team => ({ team, stats: A4P.computeTeamStats(team) }));
+document.getElementById('clubTeams').textContent = data.teams.length;
+document.getElementById('clubPlayers').textContent = allPlayers.length;
+document.getElementById('clubGlobal').textContent = A4P.avg(statsByTeam.map(x => x.stats.mentalGlobal));
+document.getElementById('clubAlerts').textContent = statsByTeam.reduce((n,x)=>n+x.stats.alertsCount,0);
+const dim = {
+  confiance:A4P.avg(statsByTeam.map(x=>x.stats.dimensions.confiance)),
+  regulation:A4P.avg(statsByTeam.map(x=>x.stats.dimensions.regulation)),
+  engagement:A4P.avg(statsByTeam.map(x=>x.stats.dimensions.engagement)),
+  stabilite:A4P.avg(statsByTeam.map(x=>x.stats.dimensions.stabilite))
+};
+A4PCharts.radar(document.getElementById('clubRadar'), ['Confiance','Régulation','Engagement','Stabilité'], [dim.confiance,dim.regulation,dim.engagement,dim.stabilite], 'Club');
+A4PCharts.line(document.getElementById('seasonLine'), ['Sept.','Oct.','Nov.','Déc.','Janv.','Fév.','Mars'], [54,58,61,63,65,67,document.getElementById('clubGlobal').textContent], 'Évolution');
+const tbody = document.getElementById('teamsTable');
+statsByTeam.forEach(({team,stats}) => {
+  tbody.insertAdjacentHTML('beforeend', `<tr><td>${team.name}</td><td>${team.sport}</td><td>${stats.playersCount}</td><td><span class="score-badge">${stats.mentalGlobal}</span></td><td><span class="alert-badge ${A4P.badgeClass(stats.alertsCount>2?'red':stats.alertsCount>0?'orange':'green')}">${stats.alertsCount}</span></td><td><a class="btn ghost" href="equipe.html?team=${team.id}">Ouvrir</a></td></tr>`);
+});
+const profileCount = {};
+statsByTeam.forEach(({stats}) => { Object.entries(stats.profileCount).forEach(([k,v]) => profileCount[k]=(profileCount[k]||0)+v); });
+A4PCharts.doughnut(document.getElementById('profilesChart'), Object.keys(profileCount), Object.values(profileCount));
+const weak = Object.entries(dim).sort((a,b)=>a[1]-b[1])[0];
+const strong = Object.entries(dim).sort((a,b)=>b[1]-a[1])[0];
+document.getElementById('staffSummary').innerHTML = `<p><strong>Indice club :</strong> ${document.getElementById('clubGlobal').textContent}/100.</p><p><strong>Point fort collectif :</strong> ${strong[0]} (${strong[1]}).</p><p><strong>Point à développer :</strong> ${weak[0]} (${weak[1]}).</p><p><strong>Recommandation staff :</strong> prioriser une séquence collective sur la régulation émotionnelle si la moyenne reste sous 55, puis cibler les joueurs en vigilance rouge ou orange sur la vue équipe.</p>`;
+A4P.syncIntoLegacyHub();
+</script>
+</body>
+</html>

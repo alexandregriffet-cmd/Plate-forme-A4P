@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Équipe | A4P</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="assets/logo-a4p.png" alt="A4P" /><div><div class="brand-title">A4P Équipe</div><div class="brand-sub">Vue staff détaillée</div></div></div>
+    <div class="nav-section"><div class="nav-label">Navigation</div><a class="nav-link" href="index.html">Hub</a><a class="nav-link" href="dashboard.html">Dashboard club</a><a class="nav-link active" href="#">Équipe</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div><h1 id="teamTitle">Équipe</h1><p id="teamSub">Analyse collective, alertes et joueurs.</p></div><div class="actions"><a class="btn secondary" href="dashboard.html">Retour dashboard</a><a class="btn" id="teamReportLink" href="#">Rapport staff</a></div></div>
+    <div class="grid kpi">
+      <article class="card"><span class="eyebrow">Effectif</span><div class="kpi-value" id="playersCount">0</div><div class="kpi-sub">joueurs</div></article>
+      <article class="card"><span class="eyebrow">Indice</span><div class="kpi-value" id="mentalGlobal">0</div><div class="kpi-sub">score global équipe</div></article>
+      <article class="card"><span class="eyebrow">Profil collectif</span><div class="kpi-value" style="font-size:20px" id="dominantProfile">—</div><div class="kpi-sub">profil dominant</div></article>
+      <article class="card"><span class="eyebrow">Alertes</span><div class="kpi-value" id="alertsCount">0</div><div class="kpi-sub">joueurs à suivre</div></article>
+    </div>
+    <div class="two-col section-space">
+      <section class="card"><h2>Radar collectif</h2><div class="chart-box"><canvas id="teamRadar"></canvas></div></section>
+      <section class="card"><h2>Répartition des profils</h2><div class="chart-box"><canvas id="teamProfiles"></canvas></div></section>
+    </div>
+    <section class="card section-space"><h2>Joueurs</h2><div class="table-wrap"><table><thead><tr><th>Joueur</th><th>Poste</th><th>Score</th><th>Confiance</th><th>Régulation</th><th>Engagement</th><th>Stabilité</th><th>Profil</th><th>Alerte</th><th>Action</th></tr></thead><tbody id="playersTable"></tbody></table></div></section>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/config.js"></script>
+<script src="data/default-data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/charts.js"></script>
+<script>
+const teamId = A4P.qs('team') || 'u18';
+const team = A4P.getTeamById(teamId);
+const stats = A4P.computeTeamStats(team);
+document.getElementById('teamTitle').textContent = `${team.name} • ${team.sport}`;
+document.getElementById('teamSub').textContent = `${team.category} • liens passation générés • synthèse staff exportable.`;
+document.getElementById('playersCount').textContent = stats.playersCount;
+document.getElementById('mentalGlobal').textContent = stats.mentalGlobal;
+document.getElementById('dominantProfile').textContent = stats.dominantProfile;
+document.getElementById('alertsCount').textContent = stats.alertsCount;
+document.getElementById('teamReportLink').href = `staff/report.html?team=${team.id}`;
+A4PCharts.radar(document.getElementById('teamRadar'), ['Confiance','Régulation','Engagement','Stabilité'], [stats.dimensions.confiance, stats.dimensions.regulation, stats.dimensions.engagement, stats.dimensions.stabilite], team.name);
+A4PCharts.doughnut(document.getElementById('teamProfiles'), Object.keys(stats.profileCount), Object.values(stats.profileCount));
+const tbody = document.getElementById('playersTable');
+team.players.forEach(player => {
+  const cmp = player.modules.cmp;
+  const level = A4P.getAlertLevel(cmp);
+  tbody.insertAdjacentHTML('beforeend', `<tr><td>${player.firstName} ${player.lastName}</td><td>${player.position || '—'}</td><td><span class="score-badge">${cmp.score_global}</span></td><td>${cmp.dimensions.confiance}</td><td>${cmp.dimensions.regulation}</td><td>${cmp.dimensions.engagement}</td><td>${cmp.dimensions.stabilite}</td><td>${cmp.profil_nom}</td><td><span class="alert-badge ${A4P.badgeClass(level)}">${A4P.badgeLabel(level)}</span></td><td><a class="btn ghost" href="joueur.html?id=${player.id}">Ouvrir</a></td></tr>`);
+});
+</script>
+</body>
+</html>

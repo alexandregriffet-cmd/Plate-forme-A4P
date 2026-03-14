@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A4P Platform V4</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="assets/logo-a4p.png" alt="A4P" />
+        <div>
+          <div class="brand-title">A4P Platform V4</div>
+          <div class="brand-sub">Hub club • coach • équipe</div>
+        </div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Navigation</div>
+        <a class="nav-link active" href="index.html">Hub principal</a>
+        <a class="nav-link" href="dashboard.html">Dashboard club</a>
+        <a class="nav-link" href="equipe.html?team=u18">Équipe U18</a>
+        <a class="nav-link" href="joueur.html?id=u18_01">Fiche joueur</a>
+        <a class="nav-link" href="staff/passation.html">Passation équipe</a>
+        <a class="nav-link" href="staff/report.html?team=u18">Rapport staff</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Modules</div>
+        <a class="nav-link" href="modules/cmp/index.html">CMP</a>
+        <a class="nav-link" href="modules/pmp/index.html">PMP</a>
+        <a class="nav-link" href="modules/psycho/index.html">Psycho</a>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h1>Plateforme de diagnostic mental A4P</h1>
+          <p>Version statique premium pour clubs, coaches et demandes d'équipe.</p>
+        </div>
+        <div class="actions">
+          <a class="btn secondary" href="dashboard.html">Ouvrir le dashboard club</a>
+          <a class="btn" href="staff/passation.html">Créer une passation équipe</a>
+        </div>
+      </div>
+
+      <section class="card hero-card">
+        <span class="eyebrow">Vision plateforme</span>
+        <h2>Un seul hub pour piloter PMP, CMP et psycho-émotionnel.</h2>
+        <p>Cette V4 est conçue comme une base propre : navigation SaaS, tableaux de bord équipe, demandes collectives, analyses staff et synchronisation locale exploitable immédiatement.</p>
+        <div class="hero-stats">
+          <div class="hero-stat"><strong id="heroPlayers">0</strong>Joueurs suivis</div>
+          <div class="hero-stat"><strong id="heroTeams">0</strong>Équipes actives</div>
+          <div class="hero-stat"><strong id="heroGlobal">0</strong>Indice mental global</div>
+        </div>
+      </section>
+
+      <div class="grid kpi section-space">
+        <article class="card"><span class="eyebrow">Module</span><h3>CMP</h3><p class="muted">Compétences mentales, profils et régulation.</p><div class="form-actions"><a class="btn" id="linkCmp" href="#">Ouvrir</a><a class="btn secondary" href="modules/cmp/index.html">Passerelle locale</a></div></article>
+        <article class="card"><span class="eyebrow">Module</span><h3>PMP</h3><p class="muted">Profil mental de performance.</p><div class="form-actions"><a class="btn" id="linkPmp" href="#">Ouvrir</a><a class="btn secondary" href="modules/pmp/index.html">Passerelle locale</a></div></article>
+        <article class="card"><span class="eyebrow">Module</span><h3>Psycho</h3><p class="muted">Équilibre psycho-émotionnel.</p><div class="form-actions"><a class="btn" id="linkPsycho" href="#">Ouvrir</a><a class="btn secondary" href="modules/psycho/index.html">Passerelle locale</a></div></article>
+        <article class="card"><span class="eyebrow">Staff</span><h3>Dashboard club</h3><p class="muted">Vue équipe, alertes, saison et synthèse staff.</p><div class="form-actions"><a class="btn" href="dashboard.html">Ouvrir</a><a class="btn secondary" href="staff/report.html?team=u18">Rapport U18</a></div></article>
+      </div>
+
+      <div class="two-col section-space">
+        <section class="card">
+          <span class="eyebrow">Ce que fait vraiment ce pack</span>
+          <ul class="list">
+            <li>Crée des clubs, coaches et équipes en local.</li>
+            <li>Génère des liens de passation d'équipe par module.</li>
+            <li>Produit un dashboard staff exploitable immédiatement.</li>
+            <li>Calcule un score mental global et des alertes simples.</li>
+            <li>Prépare l’export synchronisé vers ton hub existant.</li>
+          </ul>
+        </section>
+        <section class="card">
+          <span class="eyebrow">Limites assumées</span>
+          <ul class="list">
+            <li>Pas d’authentification serveur sécurisée dans cette version.</li>
+            <li>Pas de base distante multi-utilisateurs.</li>
+            <li>Les comptes clubs/coaches sont simulés en localStorage.</li>
+            <li>Les exports PDF utilisent l’impression navigateur.</li>
+          </ul>
+          <p class="footer-note">La base est propre pour un déploiement GitHub Pages immédiat, puis une montée en gamme vers un vrai SaaS.</p>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="js/config.js"></script>
+  <script src="data/default-data.js"></script>
+  <script src="js/core.js"></script>
+  <script>
+    const data = A4P.loadData();
+    const players = A4P.getAllPlayers(data);
+    const teamCount = data.teams.length;
+    const global = A4P.avg(players.map(p => A4P.avg([p.modules?.cmp?.score_global||0,p.modules?.pmp?.score_global||0,p.modules?.psycho?.score_global||0])));
+    document.getElementById('heroPlayers').textContent = players.length;
+    document.getElementById('heroTeams').textContent = teamCount;
+    document.getElementById('heroGlobal').textContent = global;
+    document.getElementById('linkCmp').href = A4P_CONFIG.modules.cmp;
+    document.getElementById('linkPmp').href = A4P_CONFIG.modules.pmp;
+    document.getElementById('linkPsycho').href = A4P_CONFIG.modules.psycho;
+    A4P.syncIntoLegacyHub();
+  </script>
+</body>
+</html>

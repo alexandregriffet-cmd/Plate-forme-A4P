@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Joueur | A4P</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar">
+    <div class="brand"><img src="assets/logo-a4p.png" alt="A4P" /><div><div class="brand-title">Fiche joueur A4P</div><div class="brand-sub">Restitution individuelle</div></div></div>
+    <div class="nav-section"><div class="nav-label">Navigation</div><a class="nav-link" href="dashboard.html">Dashboard</a><a class="nav-link active" href="#">Fiche joueur</a></div>
+  </aside>
+  <main class="main">
+    <div class="topbar"><div><h1 id="playerTitle">Joueur</h1><p id="playerSub">Lecture rapide et pistes de travail.</p></div><div class="actions"><a class="btn secondary" id="backTeam" href="#">Retour équipe</a><button class="btn" onclick="window.print()">Exporter PDF</button></div></div>
+    <div class="grid kpi">
+      <article class="card"><span class="eyebrow">CMP</span><div class="kpi-value" id="cmpScore">0</div><div class="kpi-sub">score compétences mentales</div></article>
+      <article class="card"><span class="eyebrow">PMP</span><div class="kpi-value" id="pmpScore">0</div><div class="kpi-sub">profil mental performance</div></article>
+      <article class="card"><span class="eyebrow">Psycho</span><div class="kpi-value" id="psyScore">0</div><div class="kpi-sub">équilibre psycho-émotionnel</div></article>
+      <article class="card"><span class="eyebrow">Alerte</span><div class="kpi-value" style="font-size:20px" id="playerAlert">—</div><div class="kpi-sub">niveau de vigilance</div></article>
+    </div>
+    <div class="two-col section-space">
+      <section class="card"><h2>Radar individuel CMP</h2><div class="chart-box"><canvas id="playerRadar"></canvas></div></section>
+      <section class="card"><h2>Lecture rapide</h2><p id="profileText" class="muted"></p><ul class="list" id="recommendations"></ul></section>
+    </div>
+  </main>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/config.js"></script>
+<script src="data/default-data.js"></script>
+<script src="js/core.js"></script>
+<script src="js/charts.js"></script>
+<script>
+const playerId = A4P.qs('id') || 'u18_01';
+const player = A4P.getPlayerById(playerId);
+const cmp = player.modules.cmp;
+const level = A4P.getAlertLevel(cmp);
+document.getElementById('playerTitle').textContent = `${player.firstName} ${player.lastName}`;
+document.getElementById('playerSub').textContent = `${player.teamName} • ${player.position || 'Poste non renseigné'} • dernière passation ${player.date}`;
+document.getElementById('backTeam').href = `equipe.html?team=${player.teamId}`;
+document.getElementById('cmpScore').textContent = cmp.score_global;
+document.getElementById('pmpScore').textContent = player.modules.pmp.score_global;
+document.getElementById('psyScore').textContent = player.modules.psycho.score_global;
+document.getElementById('playerAlert').textContent = A4P.badgeLabel(level);
+document.getElementById('profileText').textContent = `Profil CMP dominant : ${cmp.profil_nom}. Ce joueur présente une dynamique de ${cmp.dimensions.engagement >= 70 ? 'mobilisation forte' : 'mobilisation perfectible'}, avec une régulation à ${cmp.dimensions.regulation}/100 et une confiance à ${cmp.dimensions.confiance}/100.`;
+const recs = [];
+if(cmp.dimensions.regulation < 55) recs.push('Mettre en place une routine de respiration et de recentrage avant match.');
+if(cmp.dimensions.confiance < 55) recs.push('Renforcer les repères de confiance à partir des réussites récentes.');
+if(cmp.dimensions.stabilite < 60) recs.push('Travailler la constance attentionnelle sur séquences longues.');
+if(!recs.length) recs.push('Consolider les routines mentales actuelles et maintenir le niveau de stabilité observé.');
+document.getElementById('recommendations').innerHTML = recs.map(x=>`<li>${x}</li>`).join('');
+A4PCharts.radar(document.getElementById('playerRadar'), ['Confiance','Régulation','Engagement','Stabilité'], [cmp.dimensions.confiance,cmp.dimensions.regulation,cmp.dimensions.engagement,cmp.dimensions.stabilite], 'CMP');
+</script>
+</body>
+</html>
